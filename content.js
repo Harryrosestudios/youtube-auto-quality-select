@@ -36,8 +36,35 @@ class YouTubeQualityManager {
 
   async loadSettings() {
     return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ action: 'getSettings' }, (response) => {
-        this.settings = response || {
+      try {
+        chrome.runtime.sendMessage({ action: 'getSettings' }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn('Could not load settings from extension:', chrome.runtime.lastError.message);
+            // Use fallback settings
+            this.settings = {
+              autoHighest: false,
+              autoPreferred: true,
+              preferredQuality: '1080',
+              autoFallback: false,
+              fallbackQuality: '720'
+            };
+            resolve();
+            return;
+          }
+          
+          this.settings = response || {
+            autoHighest: false,
+            autoPreferred: true,
+            preferredQuality: '1080',
+            autoFallback: false,
+            fallbackQuality: '720'
+          };
+          resolve();
+        });
+      } catch (error) {
+        console.warn('Extension context invalidated, using default settings:', error.message);
+        // Use fallback settings when extension context is invalid
+        this.settings = {
           autoHighest: false,
           autoPreferred: true,
           preferredQuality: '1080',
@@ -45,7 +72,7 @@ class YouTubeQualityManager {
           fallbackQuality: '720'
         };
         resolve();
-      });
+      }
     });
   }
 
@@ -352,17 +379,37 @@ class YouTubeQualityManager {
   }
 
   log(message) {
-    chrome.runtime.sendMessage({
-      action: 'logInfo',
-      message: message
-    });
+    try {
+      chrome.runtime.sendMessage({
+        action: 'logInfo',
+        message: message
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          // Extension context invalid, log to console instead
+          console.log('YouTube Auto Quality Select:', message);
+        }
+      });
+    } catch (error) {
+      // Extension context invalidated, fallback to console logging
+      console.log('YouTube Auto Quality Select:', message);
+    }
   }
 
   logError(error) {
-    chrome.runtime.sendMessage({
-      action: 'logError',
-      error: error
-    });
+    try {
+      chrome.runtime.sendMessage({
+        action: 'logError',
+        error: error
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          // Extension context invalid, log to console instead
+          console.error('YouTube Auto Quality Select Error:', error);
+        }
+      });
+    } catch (err) {
+      // Extension context invalidated, fallback to console logging
+      console.error('YouTube Auto Quality Select Error:', error);
+    }
   }
 
   startPremiumPopupBlocking() {
