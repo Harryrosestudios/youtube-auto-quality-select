@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>YouTube Auto Quality Select</h2>
+    </div>
+    
+    <div class="section">
+      <div class="option">
+        <label class="switch">
+          <input type="checkbox" id="autoHighest">
+          <span class="slider round"></span>
+        </label>
+        <div class="option-text">
+          <strong>Auto Select Highest Quality</strong>
+          <p>Automatically select the highest available quality</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="option">
+        <label class="switch">
+          <input type="checkbox" id="autoPreferred">
+          <span class="slider round"></span>
+        </label>
+        <div class="option-text">
+          <strong>Auto Select Preferred Quality</strong>
+          <p>Select your preferred quality when available</p>
+        </div>
+      </div>
+      
+      <div class="sub-option" id="preferredQualitySection">
+        <label for="preferredQuality">Preferred Quality:</label>
+        <select id="preferredQuality">
+          <option value="2160">4K (2160p)</option>
+          <option value="1440">QHD (1440p)</option>
+          <option value="1080" selected>Full HD (1080p)</option>
+          <option value="720">HD (720p)</option>
+          <option value="480">SD (480p)</option>
+          <option value="360">360p</option>
+          <option value="240">240p</option>
+          <option value="144">144p</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="option">
+        <label class="switch">
+          <input type="checkbox" id="autoFallback">
+          <span class="slider round"></span>
+        </label>
+        <div class="option-text">
+          <strong>Auto Drop to Lower Quality</strong>
+          <p>Drop to lower quality if connection is unstable</p>
+        </div>
+      </div>
+      
+      <div class="sub-option" id="fallbackQualitySection">
+        <label for="fallbackQuality">Fallback Quality:</label>
+        <select id="fallbackQuality">
+          <option value="1080">Full HD (1080p)</option>
+          <option value="720" selected>HD (720p)</option>
+          <option value="480">SD (480p)</option>
+          <option value="360">360p</option>
+          <option value="240">240p</option>
+          <option value="144">144p</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="status" id="status">
+        <p>Extension is active</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button id="saveSettings" class="save-btn">Save Settings</button>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
