@@ -401,32 +401,42 @@ class YouTubeQualityManager {
   }
 
   checkForPremiumPopup(element) {
-    // Multiple selectors to catch various popup containers
+    // Target the specific YouTube popup containers based on 2025 structure
     const popupSelectors = [
-      // Main popup dialog containers
-      'tp-yt-paper-dialog',
+      // Primary popup containers (most common)
+      'ytd-popup-container#popup',
       'ytd-popup-container',
-      'ytd-mealbar-promo-renderer',
+      'tp-yt-paper-dialog[opened]',
+      'tp-yt-paper-dialog',
+      // Additional dialog and modal selectors
       '[role="dialog"]',
-      '.ytd-popup-container',
-      // More specific selectors
+      'ytd-mealbar-promo-renderer',
+      // YouTube-specific premium components
       'ytd-premium-subscription-item-renderer',
       'ytd-compact-promoted-item-renderer'
     ];
     
+    // Check for popups in the provided element
     popupSelectors.forEach(selector => {
-      const popups = element.querySelectorAll ? element.querySelectorAll(selector) : [];
-      popups.forEach(popup => {
-        if (this.isPremiumQualityPopup(popup)) {
-          this.removePremiumPopup(popup);
+      try {
+        const popups = element.querySelectorAll ? element.querySelectorAll(selector) : [];
+        popups.forEach(popup => {
+          if (this.isPremiumQualityPopup(popup)) {
+            this.removePremiumPopup(popup);
+          }
+        });
+        
+        // Also check if the element itself matches
+        if (element.matches && element.matches(selector) && this.isPremiumQualityPopup(element)) {
+          this.removePremiumPopup(element);
         }
-      });
-      
-      // Also check if the element itself matches
-      if (element.matches && element.matches(selector) && this.isPremiumQualityPopup(element)) {
-        this.removePremiumPopup(element);
+      } catch (e) {
+        // Silently handle any selector errors
       }
     });
+    
+    // Also check document level for popup containers that might be missed
+    this.checkDocumentLevelPopups();
   }
 
   isPremiumQualityPopup(element) {
