@@ -467,51 +467,76 @@ class YouTubeQualityManager {
     return containsPremiumQualityText || isQualityPremiumPopup;
   }
 
+  checkDocumentLevelPopups() {
+    // Direct document-level check for popup containers using the improved selectors
+    const documentPopupSelectors = [
+      'ytd-popup-container#popup',
+      'ytd-popup-container',
+      'tp-yt-paper-dialog[opened]',
+      'tp-yt-paper-dialog'
+    ];
+    
+    documentPopupSelectors.forEach(selector => {
+      try {
+        const popups = document.querySelectorAll(selector);
+        popups.forEach(popup => {
+          if (this.isPremiumQualityPopup(popup)) {
+            this.removePremiumPopup(popup);
+          }
+        });
+      } catch (e) {
+        // Silently handle selector errors
+      }
+    });
+  }
+
   removePremiumPopup(popup) {
     try {
-      // Try different removal strategies
+      this.log('Detected Premium popup, removing...');
       
-      // Strategy 1: Hide the popup
-      popup.style.display = 'none';
-      popup.style.visibility = 'hidden';
-      popup.style.opacity = '0';
-      popup.style.pointerEvents = 'none';
-      
-      // Strategy 2: Remove from DOM if safe to do so
-      if (popup.parentNode) {
-        popup.parentNode.removeChild(popup);
-      }
-      
-      // Strategy 3: Click "Not now" button if it exists
-      const notNowButton = popup.querySelector('button');
-      const buttons = popup.querySelectorAll('button, [role="button"]');
+      // Strategy 1: Try clicking "Not now" button first (most natural)
+      const buttons = popup.querySelectorAll('button, [role="button"], yt-button-renderer');
+      let buttonClicked = false;
       
       buttons.forEach(button => {
         const buttonText = button.textContent || button.getAttribute('aria-label') || '';
         if (buttonText.toLowerCase().includes('not now') || 
             buttonText.toLowerCase().includes('no thanks') ||
-            buttonText.toLowerCase().includes('dismiss') ||
-            buttonText.toLowerCase().includes('close')) {
+            buttonText.toLowerCase().includes('dismiss')) {
           button.click();
+          buttonClicked = true;
+          this.log('Clicked "Not now" button');
         }
       });
       
-      // Strategy 4: Try to click close/dismiss buttons by common selectors
-      const closeSelectors = [
-        '.ytd-popup-container [aria-label*="dismiss" i]',
-        '.ytd-popup-container [aria-label*="close" i]',
-        'button[aria-label*="Close" i]',
-        'button[title*="Close" i]',
-        '.close-button',
-        '[data-dismiss]'
-      ];
-      
-      closeSelectors.forEach(selector => {
-        const closeButton = popup.querySelector(selector);
-        if (closeButton) {
-          closeButton.click();
+      // Strategy 2: If no button worked, hide the popup completely
+      if (!buttonClicked) {
+        popup.style.display = 'none !important';
+        popup.style.visibility = 'hidden !important';
+        popup.style.opacity = '0 !important';
+        popup.style.pointerEvents = 'none !important';
+        popup.style.zIndex = '-9999 !important';
+        
+        // Also hide any backdrop/overlay
+        const backdrop = document.querySelector('tp-yt-iron-overlay-backdrop, .backdrop, [role="presentation"]');
+        if (backdrop) {
+          backdrop.style.display = 'none !important';
         }
-      });
+        
+        this.log('Popup hidden with CSS');
+      }
+      
+      // Strategy 3: As last resort, remove from DOM (after a delay to avoid issues)
+      setTimeout(() => {
+        if (popup && popup.parentNode && popup.style.display !== 'none') {
+          try {
+            popup.remove();
+            this.log('Popup removed from DOM');
+          } catch (e) {
+            // Ignore removal errors
+          }
+        }
+      }, 500);
       
       this.log('Premium quality popup blocked successfully');
       
